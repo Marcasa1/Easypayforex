@@ -917,40 +917,141 @@ const TradingPage = ({ markets }) => {
     </Box>
   )
 }
-const PortfolioPage = () => (
-  <Box sx={{ bgcolor:darkBg, minHeight:'100vh', pt:10 }}>
-    <Container maxWidth="xl" sx={{ py:4 }}>
-      <Typography variant="h4" fontWeight="bold" sx={{ color:'white', mb:4 }}>Portfolio</Typography>
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          <Paper sx={{ bgcolor:cardBg, p:3, borderRadius:3 }}>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={[{ date:'Jan', value:10000 },{ date:'Feb', value:14200 },{ date:'Mar', value:18200 },{ date:'Apr', value:21000 }]}>
-                <defs><linearGradient id="pf1" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#4fc3f7" stopOpacity={0.3} /><stop offset="95%" stopColor="#4fc3f7" stopOpacity={0} /></linearGradient></defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="date" stroke="#8892b0" />
-                <YAxis stroke="#8892b0" />
-                <Tooltip contentStyle={{ backgroundColor:'#13152a', borderRadius:8, color:'white' }} />
-                <Area type="monotone" dataKey="value" stroke="#4fc3f7" fill="url(#pf1)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </Paper>
+const PortfolioPage = () => {
+  const data = [
+    { name: 'Forex', value: 45, color: '#4fc3f7' },
+    { name: 'Commodities', value: 25, color: '#7c4dff' },
+    { name: 'Indices', value: 20, color: '#00d4aa' },
+    { name: 'Crypto', value: 10, color: '#ff6b6b' }
+  ];
+
+  // Custom tooltip that pops out on hover
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const item = payload[0].payload;
+      return (
+        <Paper sx={{ bgcolor: '#1a1f4e', p: 2, borderRadius: 2, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+            <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: item.color }} />
+            <Typography variant="body2" sx={{ color: 'white', fontWeight: 'bold' }}>
+              {item.name}
+            </Typography>
+          </Box>
+          <Typography variant="h6" sx={{ color: item.color, fontWeight: 'bold' }}>
+            {item.value}%
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#8892b0' }}>
+            of total portfolio
+          </Typography>
+        </Paper>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <Box sx={{ bgcolor: darkBg, minHeight: '100vh', pt: 10 }}>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Typography variant="h4" fontWeight="bold" sx={{ color: 'white', mb: 4 }}>
+          Portfolio Allocation
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={8}>
+            <Paper sx={{ bgcolor: cardBg, p: 3, borderRadius: 3 }}>
+              <Typography variant="h6" fontWeight="bold" sx={{ color: 'white', mb: 3 }}>
+                📈 Performance Overview
+              </Typography>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={[
+                  { date: 'Jan', value: 10000 },
+                  { date: 'Feb', value: 14200 },
+                  { date: 'Mar', value: 18200 },
+                  { date: 'Apr', value: 21000 }
+                ]}>
+                  <defs>
+                    <linearGradient id="pf1" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4fc3f7" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#4fc3f7" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="date" stroke="#8892b0" />
+                  <YAxis stroke="#8892b0" />
+                  <Tooltip contentStyle={{ backgroundColor: '#13152a', borderRadius: 8, color: 'white' }} />
+                  <Area type="monotone" dataKey="value" stroke="#4fc3f7" fill="url(#pf1)" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ bgcolor: cardBg, p: 3, borderRadius: 3, height: '100%' }}>
+              <Typography variant="h6" fontWeight="bold" sx={{ color: 'white', mb: 3 }}>
+                🍩 Asset Allocation
+              </Typography>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={data}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                    // Interactive hover effect
+                    activeIndex={[0, 1, 2, 3]}
+                    activeShape={renderActiveShape}
+                  >
+                    {data.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center', mt: 2 }}>
+                {data.map((item, i) => (
+                  <Chip
+                    key={i}
+                    label={`${item.name} ${item.value}%`}
+                    size="small"
+                    sx={{ bgcolor: item.color, color: 'white' }}
+                  />
+                ))}
+              </Box>
+            </Paper>
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ bgcolor:cardBg, p:3, borderRadius:3 }}>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={[{ name:'Forex', value:45, color:'#4fc3f7' },{ name:'Commodities', value:25, color:'#7c4dff' },{ name:'Indices', value:20, color:'#00d4aa' },{ name:'Crypto', value:10, color:'#ff6b6b' }]} cx="50%" cy="50%" innerRadius={60} outerRadius={100} dataKey="value">
-                  {[{ name:'Forex', value:45, color:'#4fc3f7' },{ name:'Commodities', value:25, color:'#7c4dff' },{ name:'Indices', value:20, color:'#00d4aa' },{ name:'Crypto', value:10, color:'#ff6b6b' }].map((e,i) => <Cell key={i} fill={e.color} />)}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-          </Paper>
-        </Grid>
-      </Grid>
-    </Container>
-  </Box>
-)
+      </Container>
+    </Box>
+  );
+};
+
+// Helper for the active shape (optional, adds a nice effect)
+const renderActiveShape = (props) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent } = props;
+  return (
+    <g>
+      <text x={cx} y={cy - 10} textAnchor="middle" fill={fill} fontSize={16} fontWeight="bold">
+        {payload.name}
+      </text>
+      <text x={cx} y={cy + 15} textAnchor="middle" fill={fill} fontSize={14}>
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+      <Pie
+        data={[payload]}
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius + 10}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        cornerRadius={5}
+      />
+    </g>
+  );
+};
 
 const DashboardPage = ({ markets }) => {
   const [positions] = useState([
