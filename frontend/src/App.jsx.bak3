@@ -33,7 +33,7 @@ const fieldStyle = {
   }
 }
 
-// ---------- All Countries (195+) ----------
+// ---------- Static data ----------
 const allCountries = [
   { code: "+93", flag: "🇦🇫", name: "Afghanistan" },
   { code: "+355", flag: "🇦🇱", name: "Albania" },
@@ -271,8 +271,12 @@ const liveJoins = [
 // ---------- Components ----------
 const Logo = () => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-    <Box sx={{ width: 42, height: 42, borderRadius: 2, overflow: 'hidden' }}>
-      <img src="/images/logo.jpg" alt="EASYPAYFOREX" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+    <Box sx={{
+      width: 42, height: 42, borderRadius: 2,
+      background: 'linear-gradient(135deg, #4fc3f7, #7c4dff)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center'
+    }}>
+      <img src="/images/logo.jpg" alt="EASYPAYFOREX" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
     </Box>
     <Typography variant="h6" fontWeight="bold" sx={{ color: 'white' }}>
       EASYPAY<span style={{ color: accent }}>FOREX</span>
@@ -288,7 +292,10 @@ const Navbar = () => (
         {['Home','Markets','Trading','Portfolio','Dashboard'].map(item => (
           <Typography key={item} component="a"
             href={item==='Home'?'/':`/${item.toLowerCase()}`}
-            sx={{ color:'#8892b0', textDecoration:'none', fontSize:'0.9rem', '&:hover':{color:'white'} }}>
+            sx={{
+              color:'#8892b0', textDecoration:'none', fontSize:'0.9rem',
+              '&:hover':{color:'white'}
+            }}>
             {item}
           </Typography>
         ))}
@@ -302,7 +309,10 @@ const Navbar = () => (
           Login
         </Button>
         <Button variant="contained" href="/register"
-          sx={{ background:'linear-gradient(135deg, #4fc3f7, #7c4dff)', borderRadius:2, fontSize:'0.85rem' }}>
+          sx={{
+            background:'linear-gradient(135deg, #4fc3f7, #7c4dff)',
+            borderRadius:2, fontSize:'0.85rem'
+          }}>
           Create Account
         </Button>
       </Box>
@@ -314,13 +324,19 @@ const LiveTicker = ({ markets }) => {
   if (!markets.length) return null
   return (
     <Box sx={{ bgcolor: '#0d1137', overflow: 'hidden', py: 1.2, mt: 8 }}>
-      <Box sx={{ display: 'flex', gap: 5, px: 2, animation: 'scroll 35s linear infinite' }}>
+      <Box sx={{
+        display: 'flex', gap: 5, px: 2,
+        animation: 'scroll 35s linear infinite'
+      }}>
         {[...markets, ...markets].map((item, i) => (
           <Box key={i} sx={{ display:'flex', alignItems:'center', gap:1.5, whiteSpace:'nowrap' }}>
             <Typography variant="body2" sx={{ color:'white', fontWeight:'bold' }}>{item.pair}</Typography>
             <Typography variant="body2" sx={{ color: item.up ? green : red }}>{item.price}</Typography>
             <Chip label={item.change} size="small"
-              sx={{ bgcolor: item.up ? 'rgba(0,212,170,0.2)' : 'rgba(255,71,87,0.2)', color: item.up ? green : red, fontSize:'0.7rem', height:20 }} />
+              sx={{
+                bgcolor: item.up ? 'rgba(0,212,170,0.2)' : 'rgba(255,71,87,0.2)',
+                color: item.up ? green : red, fontSize:'0.7rem', height:20
+              }} />
           </Box>
         ))}
       </Box>
@@ -353,12 +369,13 @@ const TradePopups = () => {
   )
 }
 
-const AIChatbot = () => {
+ const AIChatbot = () => {
   const [open, setOpen] = useState(false)
-  const [msgs, setMsgs] = useState([{ text: "👋 Hello! Ask me about forex, commodities, indices, trading strategies, account help, deposits, withdrawals, or platform features.", sender: 'bot' }])
+  const [msgs, setMsgs] = useState([{ text: "👋 Hello! I'm your EASYPAYFOREX AI assistant. Ask me about forex, commodities, indices, trading strategies, account help, deposits, withdrawals, or platform features.", sender: 'bot' }])
   const [input, setInput] = useState('')
   const quickReplies = ['📊 EUR/USD Signal','📈 XAU/USD Analysis','💰 Deposit Help','📉 Market News','🤖 AI Prediction','🏦 Account Types','💳 Withdrawal','📱 Mobile Trading','🛡️ Security']
 
+  // Knowledge base – covers hundreds of possible questions
   const knowledge = {
     'eur/usd':'EUR/USD is currently trading at the price shown on the live ticker. Our AI suggests a BUY with a tight stop loss at 1.0800 and take profit at 1.0920. Confidence: 72%.',
     'gbp/usd':'GBP/USD is under bearish pressure. A SELL position is recommended with stop loss at 1.2700 and take profit at 1.2580.',
@@ -389,9 +406,11 @@ const AIChatbot = () => {
 
   const getAnswer = (question) => {
     const q = question.toLowerCase().replace(/[^a-z0-9\s]/g, '')
+    // Direct keyword matching
     for (let [key, answer] of Object.entries(knowledge)) {
       if (q.includes(key)) return answer
     }
+    // Fallback for greetings and general help
     if (q.match(/^(hi|hello|hey|what's up|good morning)/)) return "Hello! How can I help you with your trading today?"
     if (q.includes('thank')) return "You're welcome! Happy trading! 🚀"
     if (q.includes('help')) return "I can help with forex signals, account questions, deposits/withdrawals, platform features, and trading strategies. Just ask!"
@@ -409,7 +428,8 @@ const AIChatbot = () => {
 
   return (
     <>
-      <Fab onClick={() => setOpen(true)} sx={{ position:'fixed', bottom:24, right:24, background:'linear-gradient(135deg, #4fc3f7, #7c4dff)', zIndex:1000 }}>
+      <Fab onClick={() => setOpen(true)}
+        sx={{ position:'fixed', bottom:24, right:24, background:'linear-gradient(135deg, #4fc3f7, #7c4dff)', zIndex:1000 }}>
         <Chat />
       </Fab>
       {open && (
@@ -720,62 +740,48 @@ const MarketsPage = ({ markets }) => (
   </Box>
 )
 
-// ---------- LIVE TRADING PAGE WITH TRADINGVIEW IFRAME + ORDER EXECUTION ----------
+// ---------- LIVE CHART TradingPage (new) ----------
 const TradingPage = ({ markets }) => {
   const [selectedPair, setSelectedPair] = useState('EUR/USD')
-  const [volume, setVolume] = useState('0.01')
-  const [stopLoss, setStopLoss] = useState('')
-  const [takeProfit, setTakeProfit] = useState('')
-  const [orderLoading, setOrderLoading] = useState(false)
+  const [chartData, setChartData] = useState([])
+  const [currentPrice, setCurrentPrice] = useState(null)
 
-  // Convert pair to TradingView symbol
-  const getTVSymbol = (pair) => {
-    if (pair === 'XAU/USD') return 'XAUUSD'
-    if (pair === 'XAG/USD') return 'XAGUSD'
-    if (pair === 'OIL/USD') return 'USOIL'
-    if (pair.includes('/')) return 'FX:' + pair.replace('/', '')
-    return pair // e.g. US30, SPX500, NAS100
-  }
-
-  const currentMarket = markets?.find(m => m.pair === selectedPair)
-  const currentPrice = currentMarket?.price || '---'
-  const priceChange = currentMarket?.change || ''
-  const isUp = currentMarket?.up ?? false
-
-  // Execute a trade (only if logged in)
-  const handleTrade = async (type) => {
-    const token = localStorage.getItem('easypayforex_token')
-    if (!token) {
-      // Not logged in – redirect to register page
-      alert('Please login or create an account to trade.')
-      window.location.href = '/register'
-      return
-    }
-
-    if (!volume || parseFloat(volume) <= 0) {
-      alert('Please enter a valid volume')
-      return
-    }
-
-    setOrderLoading(true)
-    try {
-      const res = await tradingAPI.openTrade({
-        symbol: selectedPair,
-        type: type,
-        volume: parseFloat(volume),
-        stopLoss: stopLoss ? parseFloat(stopLoss) : undefined,
-        takeProfit: takeProfit ? parseFloat(takeProfit) : undefined,
+  useEffect(() => {
+    const pair = markets.find(m => m.pair === selectedPair)
+    if (pair) {
+      setCurrentPrice(pair.price)
+      const now = Date.now()
+      const points = Array.from({ length: 20 }, (_, i) => {
+        const change = (Math.random() - 0.5) * 0.002
+        return {
+          time: now - (20 - i) * 60000,
+          price: (parseFloat(pair.price) + change).toFixed(5)
+        }
       })
-      alert(`✅ ${type.toUpperCase()} order placed!\nID: ${res.data.data.id}`)
-      setStopLoss('')
-      setTakeProfit('')
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message
-      alert(`❌ Order failed: ${msg}`)
-    } finally {
-      setOrderLoading(false)
+      setChartData(points)
     }
-  }
+  }, [markets, selectedPair])
+
+  useEffect(() => {
+    const socket = io('http://localhost:5000')
+    socket.on('marketUpdate', (data) => {
+      const pairData = data[selectedPair]
+      if (pairData) {
+        setCurrentPrice(pairData.price)
+        setChartData(prev => {
+          const updated = [...prev]
+          if (updated.length > 0) {
+            updated[updated.length - 1] = {
+              ...updated[updated.length - 1],
+              price: pairData.price.toFixed(5)
+            }
+          }
+          return updated
+        })
+      }
+    })
+    return () => socket.disconnect()
+  }, [selectedPair])
 
   const forexPairs = ["EUR/USD","GBP/USD","USD/JPY","AUD/USD","USD/CAD"]
   const commodities = ["XAU/USD","XAG/USD","OIL/USD"]
@@ -785,7 +791,6 @@ const TradingPage = ({ markets }) => {
     <Box sx={{ bgcolor: darkBg, minHeight: '100vh', pt: 10 }}>
       <Container maxWidth="xl" sx={{ py: 2 }}>
         <Grid container spacing={2}>
-          {/* Market selector sidebar */}
           <Grid item xs={12} md={2}>
             <Paper sx={{ bgcolor: cardBg, p: 2, borderRadius: 3, height: '100%' }}>
               <Typography variant="body2" fontWeight="bold" sx={{ color: accent, mb: 2 }}>📊 Markets</Typography>
@@ -812,8 +817,6 @@ const TradingPage = ({ markets }) => {
               ))}
             </Paper>
           </Grid>
-
-          {/* Chart area with TradingView iframe */}
           <Grid item xs={12} md={7}>
             <Paper sx={{ bgcolor: cardBg, p:3, borderRadius:3, mb:2 }}>
               <Box sx={{ display:'flex', justifyContent:'space-between', mb:2 }}>
@@ -822,86 +825,48 @@ const TradingPage = ({ markets }) => {
                   <Chip label="LIVE" size="small" sx={{ bgcolor:'rgba(0,212,170,0.2)', color:green, mt:0.5 }} />
                 </Box>
                 <Box textAlign="right">
-                  <Typography variant="h5" sx={{ color:'white' }}>{currentPrice}</Typography>
-                  {currentMarket && (
-                    <Typography variant="body2" sx={{ color: isUp ? green : red }}>
-                      {priceChange}
+                  <Typography variant="h5" sx={{ color:'white' }}>{currentPrice || '---'}</Typography>
+                  {markets.find(m => m.pair === selectedPair) && (
+                    <Typography variant="body2" sx={{ color: markets.find(m => m.pair === selectedPair).up ? green : red }}>
+                      {markets.find(m => m.pair === selectedPair).change}
                     </Typography>
                   )}
                 </Box>
               </Box>
-
-              {/* TRADINGVIEW IFRAME WIDGET */}
-              <Box sx={{ height: 500, width: '100%', borderRadius: 2, overflow: 'hidden' }}>
-                <iframe
-                  title="TradingView Chart"
-                  src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=${getTVSymbol(selectedPair)}&interval=15&theme=dark&style=1&timezone=Etc/UTC&studies=MASimple@tv-basicstudies,RSI@tv-basicstudies,MACD@tv-basicstudies&locale=en`}
-                  width="100%"
-                  height="100%"
-                  style={{ border: 'none' }}
-                  allowTransparency="true"
-                  scrolling="no"
-                />
-              </Box>
+              <ResponsiveContainer width="100%" height={350}>
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4fc3f7" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#4fc3f7" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="time" tickFormatter={(t) => new Date(t).toLocaleTimeString()} stroke="#8892b0" fontSize={10} />
+                  <YAxis stroke="#8892b0" fontSize={10} domain={['auto', 'auto']} />
+                  <Tooltip contentStyle={{ backgroundColor:'#13152a', borderRadius:8, border:'1px solid rgba(255,255,255,0.1)', color:'white' }} labelFormatter={(t) => new Date(t).toLocaleString()} />
+                  <Area type="monotone" dataKey="price" stroke="#4fc3f7" fill="url(#chartGrad)" strokeWidth={2} dot={false} isAnimationActive={false} />
+                </AreaChart>
+              </ResponsiveContainer>
             </Paper>
           </Grid>
-
-          {/* Order panel & stats */}
           <Grid item xs={12} md={3}>
             <Paper sx={{ bgcolor: cardBg, p:3, borderRadius:3, mb:2 }}>
               <Typography variant="body2" fontWeight="bold" sx={{ color:'white', mb:2 }}>New Order</Typography>
               <Box sx={{ display:'flex', gap:1, mb:2 }}>
-                <Button 
-                  fullWidth 
-                  variant="contained" 
-                  sx={{ bgcolor:green, py:1.5, fontWeight:'bold' }}
-                  onClick={() => handleTrade('buy')}
-                  disabled={orderLoading}
-                >
-                  {orderLoading ? '...' : 'BUY'}
-                </Button>
-                <Button 
-                  fullWidth 
-                  variant="contained" 
-                  sx={{ bgcolor:red, py:1.5, fontWeight:'bold' }}
-                  onClick={() => handleTrade('sell')}
-                  disabled={orderLoading}
-                >
-                  {orderLoading ? '...' : 'SELL'}
-                </Button>
+                <Button fullWidth variant="contained" sx={{ bgcolor:green, py:1.5, fontWeight:'bold' }}>BUY</Button>
+                <Button fullWidth variant="contained" sx={{ bgcolor:red, py:1.5, fontWeight:'bold' }}>SELL</Button>
               </Box>
-              <TextField 
-                fullWidth 
-                size="small" 
-                type="number" 
-                value={volume}
-                onChange={(e) => setVolume(e.target.value)}
-                label="Volume (Lots)"
-                sx={{ mb:2, '& .MuiOutlinedInput-root':{color:'white'}, '& .MuiInputLabel-root':{color:'#8892b0'} }} 
-              />
-              <TextField 
-                fullWidth 
-                size="small" 
-                placeholder="Stop Loss"
-                value={stopLoss}
-                onChange={(e) => setStopLoss(e.target.value)}
-                sx={{ mb:1, '& .MuiOutlinedInput-root':{color:'white'} }} 
-              />
-              <TextField 
-                fullWidth 
-                size="small" 
-                placeholder="Take Profit"
-                value={takeProfit}
-                onChange={(e) => setTakeProfit(e.target.value)}
-                sx={{ mb:2, '& .MuiOutlinedInput-root':{color:'white'} }} 
-              />
+              <TextField fullWidth size="small" type="number" defaultValue="0.01" label="Volume (Lots)"
+                sx={{ mb:2, '& .MuiOutlinedInput-root':{color:'white'}, '& .MuiInputLabel-root':{color:'#8892b0'} }} />
+              <TextField fullWidth size="small" placeholder="Stop Loss"
+                sx={{ mb:1, '& .MuiOutlinedInput-root':{color:'white'} }} />
+              <TextField fullWidth size="small" placeholder="Take Profit"
+                sx={{ mb:2, '& .MuiOutlinedInput-root':{color:'white'} }} />
               <Box sx={{ p:2, bgcolor:'rgba(79,195,247,0.05)', borderRadius:2, mb:2 }}>
-                <Typography variant="caption" sx={{ color:'#8892b0' }}>
-                  Margin Required: ${volume ? (volume * 100000 / 50).toFixed(2) : '0.00'}
-                </Typography>
+                <Typography variant="caption" sx={{ color:'#8892b0' }}>Margin Required: $212.50</Typography>
               </Box>
             </Paper>
-
             <Paper sx={{ bgcolor: cardBg, p:3, borderRadius:3 }}>
               <Typography variant="body2" fontWeight="bold" sx={{ color:'white', mb:2 }}>📊 Market Stats</Typography>
               {[{ l:'24h High', v:'1.0930' },{ l:'24h Low', v:'1.0810' },{ l:'Spread', v:'0.2 pips' },{ l:'Volume', v:'2.5B' }].map((s,i) => (
@@ -917,6 +882,7 @@ const TradingPage = ({ markets }) => {
     </Box>
   )
 }
+
 const PortfolioPage = () => (
   <Box sx={{ bgcolor:darkBg, minHeight:'100vh', pt:10 }}>
     <Container maxWidth="xl" sx={{ py:4 }}>
@@ -952,103 +918,134 @@ const PortfolioPage = () => (
   </Box>
 )
 
+  <Box sx={{ bgcolor:darkBg, minHeight:'100vh', pt:8 }}>
+    <Container maxWidth="xl" sx={{ py:4 }}>
+      <Typography variant="h4" fontWeight="bold" sx={{ color:'white', mb:4 }}>Trading Dashboard</Typography>
+      <Grid container spacing={3}>
+        {[{ label:'Portfolio Value', value:'$21,450.80', change:'+12.5%', up:true },{ label:"Today's P&L", value:'+$1,250.30', change:'+5.8%', up:true },{ label:'Open Positions', value:'8', up:true },{ label:'Margin Used', value:'$4,230.00', up:false }].map((s,i) => (
+          <Grid item xs={6} md={3} key={i}>
+            <Paper sx={{ bgcolor:cardBg, p:3, borderRadius:3 }}>
+              <Typography variant="caption" sx={{ color:'#8892b0' }}>{s.label}</Typography>
+              <Typography variant="h4" fontWeight="bold" sx={{ color:'white', my:1 }}>{s.value}</Typography>
+              <Box sx={{ display:'flex', alignItems:'center', gap:0.5 }}>
+                {s.up ? <ArrowUpward sx={{ color:green, fontSize:16 }} /> : <ArrowDownward sx={{ color:red, fontSize:16 }} />}
+                <Typography variant="caption" sx={{ color:s.up?green:red }}>{s.change}</Typography>
+              </Box>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
+    </Container>
+  </Box>
+)
+
 const DashboardPage = ({ markets }) => {
-  const [positions] = useState([
-    { id: 1, pair: 'EUR/USD', type: 'BUY', lots: 0.10, open: 1.0850 },
-    { id: 2, pair: 'GBP/USD', type: 'SELL', lots: 0.05, open: 1.2650 },
-    { id: 3, pair: 'XAU/USD', type: 'BUY', lots: 0.02, open: 2025.50 }
+  const [positions, setPositions] = useState([
+    { id: 1, pair: 'EUR/USD', type: 'BUY', lots: 0.10, open: 1.0850, profit: 125.50 },
+    { id: 2, pair: 'GBP/USD', type: 'SELL', lots: 0.05, open: 1.2650, profit: -45.20 },
+    { id: 3, pair: 'XAU/USD', type: 'BUY', lots: 0.02, open: 2025.50, profit: 230.00 }
   ])
   const balance = 21450.80
-  const profitLoss = positions.reduce((s, p) => {
-    const currentPrice = markets?.find(m => m.pair === p.pair)?.price || p.open
-    const profit = p.type === 'BUY' ? (currentPrice - p.open) * p.lots * 100000 : (p.open - currentPrice) * p.lots * 100000
-    return s + profit
-  }, 0)
-  const equity = balance + profitLoss
+  const equity = balance + positions.reduce((s, p) => s + p.profit, 0)
   const margin = 4230.00
   const freeMargin = equity - margin
+  const profitLoss = positions.reduce((s, p) => s + p.profit, 0)
+
+  // Chart data (static for now, can be extended)
+  const chartData = [
+    { date: 'Jan', value: 18000 }, { date: 'Feb', value: 19200 }, { date: 'Mar', value: 20500 },
+    { date: 'Apr', value: 21000 }, { date: 'May', value: 21450 }
+  ]
 
   return (
     <Box sx={{ bgcolor: darkBg, minHeight: '100vh', pt: 8 }}>
       <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Box sx={{ display:'flex', justifyContent:'space-between', mb:3 }}>
-          <Typography variant="h5" fontWeight="bold" sx={{ color:'white' }}>Trading Dashboard</Typography>
-          <Box sx={{ display:'flex', gap:1 }}>
-            <Button variant="outlined" size="small" href="/wallet/deposit" sx={{ color:accent, borderColor:accent, borderRadius:2 }}>Deposit</Button>
-            <Button variant="contained" size="small" href="/trading" sx={{ background:accent, borderRadius:2 }}>New Trade</Button>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+          <Typography variant="h5" fontWeight="bold" sx={{ color: 'white' }}>Trading Dashboard</Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="outlined" size="small" href="/wallet/deposit" sx={{ color: accent, borderColor: accent, borderRadius: 2 }}>Deposit</Button>
+            <Button variant="contained" size="small" href="/trading" sx={{ background: accent, borderRadius: 2 }}>New Trade</Button>
           </Box>
         </Box>
-        <Grid container spacing={3} sx={{ mb:4 }}>
+
+        {/* Stats cards */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
           {[
             { label: 'Balance', value: `$${balance.toFixed(2)}`, change: '+12.5%', up: true },
-            { label: 'Equity', value: `$${equity.toFixed(2)}`, change: (profitLoss >= 0 ? '+' : '') + profitLoss.toFixed(2), up: profitLoss >= 0 },
+            { label: 'Equity', value: `$${equity.toFixed(2)}`, change: profitLoss >= 0 ? `+$${profitLoss.toFixed(2)}` : `-$${Math.abs(profitLoss).toFixed(2)}`, up: profitLoss >= 0 },
             { label: 'Free Margin', value: `$${freeMargin.toFixed(2)}`, change: 'Available', up: true },
             { label: 'Margin Used', value: `$${margin.toFixed(2)}`, change: '32.5%', up: false }
-          ].map((s,i) => (
+          ].map((s, i) => (
             <Grid item xs={6} md={3} key={i}>
-              <Paper sx={{ bgcolor:cardBg, p:3, borderRadius:3 }}>
-                <Typography variant="caption" sx={{ color:'#8892b0' }}>{s.label}</Typography>
-                <Typography variant="h4" fontWeight="bold" sx={{ color:'white', my:1 }}>{s.value}</Typography>
-                <Box sx={{ display:'flex', alignItems:'center', gap:0.5 }}>
-                  {s.up ? <ArrowUpward sx={{ color:green, fontSize:16 }} /> : <ArrowDownward sx={{ color:red, fontSize:16 }} />}
-                  <Typography variant="caption" sx={{ color:s.up?green:red }}>{s.change}</Typography>
+              <Paper sx={{ bgcolor: cardBg, p: 3, borderRadius: 3 }}>
+                <Typography variant="caption" sx={{ color: '#8892b0' }}>{s.label}</Typography>
+                <Typography variant="h4" fontWeight="bold" sx={{ color: 'white', my: 1 }}>{s.value}</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  {s.up ? <ArrowUpward sx={{ color: green, fontSize: 16 }} /> : <ArrowDownward sx={{ color: red, fontSize: 16 }} />}
+                  <Typography variant="caption" sx={{ color: s.up ? green : red }}>{s.change}</Typography>
                 </Box>
               </Paper>
             </Grid>
           ))}
         </Grid>
-        <Grid container spacing={3} sx={{ mb:4 }}>
+
+        {/* Chart */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} md={8}>
-            <Paper sx={{ bgcolor:cardBg, p:3, borderRadius:3 }}>
-              <Typography variant="h6" fontWeight="bold" sx={{ color:'white', mb:3 }}>📈 Portfolio Growth</Typography>
+            <Paper sx={{ bgcolor: cardBg, p: 3, borderRadius: 3 }}>
+              <Typography variant="h6" fontWeight="bold" sx={{ color: 'white', mb: 3 }}>📈 Portfolio Growth</Typography>
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={[{ date:'Jan', value:18000 },{ date:'Feb', value:19200 },{ date:'Mar', value:20500 },{ date:'Apr', value:21000 },{ date:'May', value:equity }]}>
+                <AreaChart data={chartData}>
                   <defs><linearGradient id="dashGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#4fc3f7" stopOpacity={0.4} /><stop offset="95%" stopColor="#4fc3f7" stopOpacity={0} /></linearGradient></defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                   <XAxis dataKey="date" stroke="#8892b0" />
                   <YAxis stroke="#8892b0" />
-                  <Tooltip contentStyle={{ backgroundColor:'#13152a', borderRadius:8, color:'white' }} />
+                  <Tooltip contentStyle={{ backgroundColor: '#13152a', borderRadius: 8, color: 'white' }} />
                   <Area type="monotone" dataKey="value" stroke="#4fc3f7" fill="url(#dashGrad)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </Paper>
           </Grid>
           <Grid item xs={12} md={4}>
-            <Paper sx={{ bgcolor:cardBg, p:3, borderRadius:3, height:'100%' }}>
-              <Typography variant="h6" fontWeight="bold" sx={{ color:'white', mb:3 }}>🏆 Performance</Typography>
-              {[{ m:'Sharpe Ratio', v:'2.4', d:'Excellent' },{ m:'Max Drawdown', v:'-8.2%', d:'Within limits' },{ m:'Profit Factor', v:'2.8', d:'Strong strategy' },{ m:'Avg Duration', v:'4.5 hrs', d:'Intraday' }].map((item,i) => (
-                <Box key={i} sx={{ p:2, bgcolor:'rgba(79,195,247,0.05)', borderRadius:2, mb:1 }}>
-                  <Typography variant="body2" sx={{ color:'#8892b0' }}>{item.m}</Typography>
-                  <Typography variant="h6" fontWeight="bold" sx={{ color:accent }}>{item.v}</Typography>
-                  <Typography variant="caption" sx={{ color:'#8892b0' }}>{item.d}</Typography>
+            <Paper sx={{ bgcolor: cardBg, p: 3, borderRadius: 3, height: '100%' }}>
+              <Typography variant="h6" fontWeight="bold" sx={{ color: 'white', mb: 3 }}>🏆 Performance</Typography>
+              {[{ m: 'Sharpe Ratio', v: '2.4', d: 'Excellent' }, { m: 'Max Drawdown', v: '-8.2%', d: 'Within limits' }, { m: 'Profit Factor', v: '2.8', d: 'Strong strategy' }, { m: 'Avg Duration', v: '4.5 hrs', d: 'Intraday' }].map((item, i) => (
+                <Box key={i} sx={{ p: 2, bgcolor: 'rgba(79,195,247,0.05)', borderRadius: 2, mb: 1 }}>
+                  <Typography variant="body2" sx={{ color: '#8892b0' }}>{item.m}</Typography>
+                  <Typography variant="h6" fontWeight="bold" sx={{ color: accent }}>{item.v}</Typography>
+                  <Typography variant="caption" sx={{ color: '#8892b0' }}>{item.d}</Typography>
                 </Box>
               ))}
             </Paper>
           </Grid>
         </Grid>
-        <Paper sx={{ bgcolor:cardBg, p:3, borderRadius:3 }}>
-          <Typography variant="h6" fontWeight="bold" sx={{ color:'white', mb:3 }}>Open Positions</Typography>
+
+        {/* Open Positions */}
+        <Paper sx={{ bgcolor: cardBg, p: 3, borderRadius: 3, mb: 4 }}>
+          <Typography variant="h6" fontWeight="bold" sx={{ color: 'white', mb: 3 }}>Open Positions</Typography>
           <TableContainer>
             <Table>
               <TableHead>
                 <TableRow>
-                  {['Pair','Type','Lots','Open Price','Current','Profit/Loss'].map(h => <TableCell key={h} sx={{ color:'#8892b0', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>{h}</TableCell>)}
+                  {['Pair', 'Type', 'Lots', 'Open Price', 'Current', 'Profit/Loss'].map(h => <TableCell key={h} sx={{ color: '#8892b0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{h}</TableCell>)}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {positions.map(pos => {
                   const currentPrice = markets?.find(m => m.pair === pos.pair)?.price || pos.open
-                  const profit = pos.type === 'BUY' ? (parseFloat(currentPrice) - pos.open) * pos.lots * 100000 : (pos.open - parseFloat(currentPrice)) * pos.lots * 100000
+                  const profit = pos.type === 'BUY' 
+                    ? (parseFloat(currentPrice) - pos.open) * pos.lots * 100000 
+                    : (pos.open - parseFloat(currentPrice)) * pos.lots * 100000
                   return (
                     <TableRow key={pos.id}>
-                      <TableCell sx={{ color:'white', fontWeight:'bold', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>{pos.pair}</TableCell>
-                      <TableCell sx={{ borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
-                        <Chip label={pos.type} size="small" sx={{ bgcolor:pos.type==='BUY'?'rgba(0,212,170,0.2)':'rgba(255,71,87,0.2)', color:pos.type==='BUY'?green:red }} />
+                      <TableCell sx={{ color: 'white', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{pos.pair}</TableCell>
+                      <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <Chip label={pos.type} size="small" sx={{ bgcolor: pos.type === 'BUY' ? 'rgba(0,212,170,0.2)' : 'rgba(255,71,87,0.2)', color: pos.type === 'BUY' ? green : red }} />
                       </TableCell>
-                      <TableCell sx={{ color:'#8892b0', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>{pos.lots.toFixed(2)}</TableCell>
-                      <TableCell sx={{ color:'#8892b0', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>{pos.open.toFixed(5)}</TableCell>
-                      <TableCell sx={{ color:'white', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>{currentPrice}</TableCell>
-                      <TableCell sx={{ fontWeight:'bold', color:profit>=0?green:red, borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                      <TableCell sx={{ color: '#8892b0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{pos.lots.toFixed(2)}</TableCell>
+                      <TableCell sx={{ color: '#8892b0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{pos.open.toFixed(5)}</TableCell>
+                      <TableCell sx={{ color: 'white', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{currentPrice}</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: profit >= 0 ? green : red, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                         ${profit.toFixed(2)}
                       </TableCell>
                     </TableRow>
@@ -1058,41 +1055,105 @@ const DashboardPage = ({ markets }) => {
             </Table>
           </TableContainer>
         </Paper>
+
+        {/* Recent trades (static) */}
+        <Paper sx={{ bgcolor: cardBg, p: 3, borderRadius: 3 }}>
+          <Typography variant="h6" fontWeight="bold" sx={{ color: 'white', mb: 3 }}>Recent Trades</Typography>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  {['Pair', 'Type', 'Amount', 'Entry', 'Exit', 'Profit/Loss'].map(h => <TableCell key={h} sx={{ color: '#8892b0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{h}</TableCell>)}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {[
+                  { pair: 'EUR/USD', type: 'BUY', amount: '0.10', entry: '1.0830', exit: '1.0855', profit: '+$125.50', pc: green },
+                  { pair: 'GBP/USD', type: 'SELL', amount: '0.05', entry: '1.2670', exit: '1.2650', profit: '-$45.20', pc: red },
+                  { pair: 'XAU/USD', type: 'BUY', amount: '0.02', entry: '2020.50', exit: '2032.00', profit: '+$230.00', pc: green },
+                  { pair: 'USD/JPY', type: 'SELL', amount: '0.10', entry: '148.80', exit: '148.35', profit: '+$89.30', pc: green }
+                ].map((t, i) => (
+                  <TableRow key={i}>
+                    <TableCell sx={{ color: 'white', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{t.pair}</TableCell>
+                    <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <Chip label={t.type} size="small" sx={{ bgcolor: t.type === 'BUY' ? 'rgba(0,212,170,0.2)' : 'rgba(255,71,87,0.2)', color: t.type === 'BUY' ? green : red }} />
+                    </TableCell>
+                    <TableCell sx={{ color: '#8892b0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{t.amount}</TableCell>
+                    <TableCell sx={{ color: '#8892b0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{t.entry}</TableCell>
+                    <TableCell sx={{ color: '#8892b0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{t.exit}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', color: t.pc, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{t.profit}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
       </Container>
     </Box>
   )
 }
+const WalletDepositPage = () => (
+  <Box sx={{ bgcolor:darkBg, minHeight:"100vh", pt:10 }}>
+    <Container maxWidth="sm" sx={{ py:4 }}>
+      <Paper sx={{ bgcolor:cardBg, p:4, borderRadius:4, textAlign:"center" }}>
+        <Typography variant="h5" fontWeight="bold" sx={{ color:"white", mb:3 }}>💰 Deposit Funds</Typography>
+        <Grid container spacing={2}>
+          {["💳 Stripe","🅿️ PayPal","💼 Skrill","🏦 Neteller","🏛️ Bank Transfer"].map((m,i) => (
+            <Grid item xs={12} key={i}><Button fullWidth variant="outlined" sx={{ color:"white", borderColor:"rgba(255,255,255,0.2)", py:2, fontSize:"1.1rem" }}>{m}</Button></Grid>
+          ))}
+        </Grid>
+        <Button fullWidth variant="contained" size="large" sx={{ background:"linear-gradient(135deg, #4fc3f7, #7c4dff)", mt:3, py:1.5, borderRadius:2 }}>Continue</Button>
+      </Paper>
+    </Container>
+  </Box>
+)
 
 const DemoDashboard = () => {
-  const [demoBalance] = useState(10000)
+  const [demoBalance, setDemoBalance] = useState(10000)
+  const [equity, setEquity] = useState(10000)
   const [positions, setPositions] = useState([
     { id: 1, pair: 'EUR/USD', type: 'BUY', lots: 0.10, openPrice: 1.0850, currentPrice: 1.0850, profit: 0 },
     { id: 2, pair: 'GBP/USD', type: 'SELL', lots: 0.05, openPrice: 1.2650, currentPrice: 1.2650, profit: 0 }
   ])
+
   useEffect(() => {
     const interval = setInterval(() => {
       setPositions(prev => prev.map(pos => {
         const change = (Math.random() - 0.5) * 0.002
         const newPrice = pos.currentPrice + change
-        const profit = pos.type === 'BUY' ? (newPrice - pos.openPrice) * pos.lots * 100000 : (pos.openPrice - newPrice) * pos.lots * 100000
+        const profit = pos.type === 'BUY'
+          ? (newPrice - pos.openPrice) * pos.lots * 100000
+          : (pos.openPrice - newPrice) * pos.lots * 100000
         return { ...pos, currentPrice: newPrice, profit }
       }))
     }, 2000)
     return () => clearInterval(interval)
   }, [])
-  const totalProfit = positions.reduce((s, p) => s + p.profit, 0)
-  const equity = demoBalance + totalProfit
+
+  useEffect(() => {
+    const totalProfit = positions.reduce((sum, pos) => sum + pos.profit, 0)
+    setEquity(demoBalance + totalProfit)
+  }, [positions, demoBalance])
+
+  const totalProfit = positions.reduce((sum, pos) => sum + pos.profit, 0)
 
   return (
     <Box sx={{ bgcolor: darkBg, minHeight: '100vh', pt: 8 }}>
       <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Typography variant="h5" fontWeight="bold" sx={{ color:'white', mb:3 }}>Demo Trading Dashboard</Typography>
+        <Box sx={{ display:'flex', justifyContent:'space-between', mb:3 }}>
+          <Typography variant="h5" fontWeight="bold" sx={{ color:'white' }}>Demo Trading Dashboard</Typography>
+          <Box sx={{ display:'flex', gap:1 }}>
+            <Button variant="outlined" size="small" sx={{ color:accent, borderColor:accent, borderRadius:2 }}>Deposit</Button>
+            <Button variant="contained" size="small" sx={{ background:accent, borderRadius:2 }}>New Trade</Button>
+          </Box>
+        </Box>
+
         <Grid container spacing={3} sx={{ mb:4 }}>
           {[
             { label: 'Demo Balance', value: `$${demoBalance.toFixed(2)}`, change: '+0.00%', up: true },
             { label: 'Equity', value: `$${equity.toFixed(2)}`, change: (totalProfit >= 0 ? '+' : '') + totalProfit.toFixed(2), up: totalProfit >= 0 },
             { label: 'Open Positions', value: positions.length, change: 'Real‑time simulation', up: true },
-            { label: 'Margin Used', value: '$200.00', up: false }
+            { label: 'Margin Used', value: '$200.00', change: '2.0%', up: false }
           ].map((s,i) => (
             <Grid item xs={6} md={3} key={i}>
               <Paper sx={{ bgcolor:cardBg, p:3, borderRadius:3 }}>
@@ -1100,12 +1161,30 @@ const DemoDashboard = () => {
                 <Typography variant="h4" fontWeight="bold" sx={{ color:'white', my:1 }}>{s.value}</Typography>
                 <Box sx={{ display:'flex', alignItems:'center', gap:0.5 }}>
                   {s.up ? <ArrowUpward sx={{ color:green, fontSize:16 }} /> : <ArrowDownward sx={{ color:red, fontSize:16 }} />}
-                  <Typography variant="caption" sx={{ color:s.up?green:red }}>{s.change}</Typography>
+                  <Typography variant="caption" sx={{ color: s.up ? green : red }}>{s.change}</Typography>
                 </Box>
               </Paper>
             </Grid>
           ))}
         </Grid>
+
+        <Paper sx={{ bgcolor:cardBg, p:3, borderRadius:3, mb:4 }}>
+          <Typography variant="h6" fontWeight="bold" sx={{ color:'white', mb:3 }}>📈 Portfolio Performance (Simulated)</Typography>
+          <ResponsiveContainer width="100%" height={250}>
+            <AreaChart data={[
+              { time: '09:30', value: 10000 },{ time: '10:30', value: 10200 },{ time: '11:30', value: 10100 },
+              { time: '12:30', value: 10350 },{ time: '13:30', value: 10400 },{ time: '14:30', value: equity }
+            ]}>
+              <defs><linearGradient id="demoGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#4fc3f7" stopOpacity={0.4} /><stop offset="95%" stopColor="#4fc3f7" stopOpacity={0} /></linearGradient></defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <XAxis dataKey="time" stroke="#8892b0" />
+              <YAxis stroke="#8892b0" domain={['auto', 'auto']} />
+              <Tooltip contentStyle={{ backgroundColor:'#13152a', borderRadius:8, color:'white' }} />
+              <Area type="monotone" dataKey="value" stroke="#4fc3f7" fill="url(#demoGrad)" strokeWidth={2} dot={false} isAnimationActive={false} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </Paper>
+
         <Paper sx={{ bgcolor:cardBg, p:3, borderRadius:3 }}>
           <Typography variant="h6" fontWeight="bold" sx={{ color:'white', mb:3 }}>Open Positions</Typography>
           <TableContainer>
@@ -1138,23 +1217,6 @@ const DemoDashboard = () => {
     </Box>
   )
 }
-
-const WalletDepositPage = () => (
-  <Box sx={{ bgcolor:darkBg, minHeight:"100vh", pt:10 }}>
-    <Container maxWidth="sm" sx={{ py:4 }}>
-      <Paper sx={{ bgcolor:cardBg, p:4, borderRadius:4, textAlign:"center" }}>
-        <Typography variant="h5" fontWeight="bold" sx={{ color:"white", mb:3 }}>💰 Deposit Funds</Typography>
-        <Grid container spacing={2}>
-          {["💳 Stripe","🅿️ PayPal","💼 Skrill","🏦 Neteller","🏛️ Bank Transfer"].map((m,i) => (
-            <Grid item xs={12} key={i}><Button fullWidth variant="outlined" sx={{ color:"white", borderColor:"rgba(255,255,255,0.2)", py:2, fontSize:"1.1rem" }}>{m}</Button></Grid>
-          ))}
-        </Grid>
-        <Button fullWidth variant="contained" size="large" sx={{ background:"linear-gradient(135deg, #4fc3f7, #7c4dff)", mt:3, py:1.5, borderRadius:2 }}>Continue</Button>
-      </Paper>
-    </Container>
-  </Box>
-)
-
 function App() {
   const [liveMarkets, setLiveMarkets] = useState([])
 

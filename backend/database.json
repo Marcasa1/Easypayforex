@@ -1,0 +1,25 @@
+{
+  "users": [],
+  "admins": [
+    {
+      "id": 1,
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin@easypayforex.com",
+      "password": "$2b$10$i8VU2mk1tl8rNnzyRmqe7ujcLfTTT5n7w4TvoqUuKbeJxq5QRUt/i",
+      "role": "super_admin",
+      "permissions": [
+        "manage_users",
+        "manage_trades",
+        "manage_transactions",
+        "view_reports"
+      ],
+      "isActive": true,
+      "lastLogin": null,
+      "createdAt": "2026-05-12T11:23:00.434Z"
+    }
+  ],
+  "trades": [],
+  "txns": [],
+  "nextId": 2
+}
