@@ -15,7 +15,7 @@ const io = new Server(server, { cors: { origin: '*' } });
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
+// Connect to MongoDB (once, at the bottom after all setup)
 mongoose.connect('mongodb://localhost:27017/easypayforex')
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => { console.error('❌ MongoDB error:', err.message); process.exit(1); });
@@ -76,23 +76,86 @@ async function seedAdmin() {
   }
 }
 
-// ========== LIVE MARKET DATA ==========
+// ========== EXPANDED LIVE MARKET DATA ==========
 const markets = {
+  // Forex
   'EUR/USD': { price: 1.0850, change: '+0.15%', up: true },
   'GBP/USD': { price: 1.2650, change: '-0.20%', up: false },
   'USD/JPY': { price: 148.50, change: '+0.34%', up: true },
+  'USD/CHF': { price: 0.8750, change: '-0.10%', up: false },
+  'AUD/USD': { price: 0.6550, change: '+0.05%', up: true },
+  'USD/CAD': { price: 1.3450, change: '+0.20%', up: true },
+  'NZD/USD': { price: 0.6150, change: '-0.05%', up: false },
+  'EUR/GBP': { price: 0.8575, change: '+0.10%', up: true },
+  'EUR/JPY': { price: 161.25, change: '+0.75%', up: true },
+  'GBP/JPY': { price: 187.80, change: '+0.45%', up: true },
+
+  // Commodities
   'XAU/USD': { price: 2025.50, change: '+0.62%', up: true },
-  'US30': { price: 37500, change: '+0.40%', up: true },
+  'XAG/USD': { price: 23.45, change: '-0.25%', up: false },
   'OIL/USD': { price: 72.50, change: '+1.25%', up: true },
-  'BTC/USD': { price: 43250, change: '+2.15%', up: true }
+  'GAS/USD': { price: 2.45, change: '-0.05%', up: false },
+  'COPPER/USD': { price: 3.85, change: '+0.02%', up: true },
+  'COTTON/USD': { price: 0.85, change: '-0.01%', up: false },
+  'COFFEE/USD': { price: 185.20, change: '+2.10%', up: true },
+
+  // Indices
+  'US30': { price: 37500, change: '+0.40%', up: true },
+  'SPX500': { price: 4780, change: '+0.53%', up: true },
+  'NAS100': { price: 16850, change: '+0.72%', up: true },
+  'UK100': { price: 7650, change: '-0.30%', up: false },
+  'GER30': { price: 16750, change: '+0.85%', up: true },
+  'JPN225': { price: 35750, change: '+0.70%', up: true },
+  'AUS200': { price: 7250, change: '+0.15%', up: true },
+  'EU50': { price: 4250, change: '+0.40%', up: true },
+  'FRA40': { price: 7350, change: '-0.20%', up: false },
+
+  // Cryptocurrencies
+  'BTC/USD': { price: 43250, change: '+2.15%', up: true },
+  'ETH/USD': { price: 2350, change: '+1.80%', up: true },
+  'XRP/USD': { price: 0.52, change: '-0.75%', up: false },
+  'LTC/USD': { price: 85.20, change: '+1.20%', up: true },
+  'ADA/USD': { price: 0.38, change: '-1.10%', up: false },
+  'SOL/USD': { price: 108.50, change: '+3.40%', up: true },
+  'DOT/USD': { price: 5.80, change: '+0.90%', up: true },
+  'BNB/USD': { price: 310.20, change: '+0.60%', up: true },
+
+  // Stocks (popular US equities)
+  'AAPL': { price: 185.50, change: '+1.20%', up: true },
+  'MSFT': { price: 420.30, change: '+0.80%', up: true },
+  'GOOGL': { price: 142.10, change: '+1.50%', up: true },
+  'AMZN': { price: 175.40, change: '+2.10%', up: true },
+  'TSLA': { price: 245.60, change: '-3.20%', up: false },
+  'META': { price: 510.80, change: '+0.45%', up: true },
+  'NVDA': { price: 880.20, change: '+5.20%', up: true },
+  'NFLX': { price: 625.30, change: '+0.70%', up: true }
 };
 
+// ========== REALISTIC PRICE MOVEMENT LOOP ==========
 setInterval(() => {
   Object.keys(markets).forEach(key => {
-    const v = key.includes('BTC') ? 50 : key.includes('XAU') ? 2 : 0.0005;
-    const change = (Math.random() - 0.5) * v;
-    markets[key].price = parseFloat((markets[key].price + change).toFixed(2));
+    const basePrice = markets[key].price;
+    let volatility = 0.0005; // default (forex)
+
+    if (key.includes('XAU') || key.includes('XAG')) volatility = 0.002;
+    else if (key.includes('OIL') || key.includes('GAS') || key.includes('COPPER')) volatility = 0.003;
+    else if (key.includes('BTC') || key.includes('ETH')) volatility = 0.008;
+    else if (key.includes('SOL') || key.includes('DOT')) volatility = 0.01;
+    else if (/^[A-Z]+$/.test(key) && key.length <= 5) volatility = 0.005; // stocks
+    else if (/^\d/.test(key) || ['SPX500','NAS100','US30','UK100','GER30','JPN225','AUS200','EU50','FRA40'].includes(key)) volatility = 0.004; // indices
+
+    const random = (Math.random() - 0.5) * 2;
+    const change = random * volatility * basePrice;
+    const spike = Math.random() < 0.05 ? (Math.random() - 0.5) * volatility * basePrice * 3 : 0;
+    const newPrice = basePrice + change + spike;
+
+    markets[key].price = Math.max(0.01, parseFloat(newPrice.toFixed(
+      key.includes('JPY') || key.includes('BTC') ? 2 : 
+      key.includes('XAU') || key.includes('SPX') ? 2 : 
+      basePrice < 10 ? 4 : 2
+    )));
     markets[key].up = change > 0;
+    markets[key].change = (change > 0 ? '+' : '') + ((change / basePrice) * 100).toFixed(2) + '%';
   });
   io.emit('marketUpdate', markets);
 }, 1000);
@@ -127,7 +190,7 @@ app.post('/api/auth/register', async (req, res) => {
     const exists = await User.findOne({ $or: [{ email }, { phoneNumber }] });
     if (exists) return res.status(400).json({ success: false, message: 'User already exists' });
     const user = await User.create({ firstName, lastName, email, phoneNumber, countryCode, password, accountType });
-    if (email) sendEmail({ to: email, subject: 'Welcome to EASYPAYFOREX! 🎉', html: `<h1>Welcome ${firstName}!</h1>` }).catch(()=>{});
+    if (email) sendEmail({ to: email, subject: 'Welcome to EASYPAYFOREX! 🎉', html: `<h1>Welcome ${firstName}!</h1>` }).catch(err => console.error('❌ Email failed:', err.message));
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
     res.status(201).json({ success: true, token, user: { ...user._doc, password: undefined } });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
@@ -141,6 +204,13 @@ app.post('/api/auth/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid credentials' });
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    if (user.email) {
+      sendEmail({
+        to: user.email,
+        subject: 'New Login to Your EASYPAYFOREX Account',
+        html: `<h2>Login Alert</h2><p>Your account was just logged into at ${new Date().toLocaleString()}. If this was you, no action is needed. If not, please contact support immediately.</p>`
+      }).catch(err => console.error('Login email failed:', err.message));
+    }
     res.json({ success: true, token, user: { ...user._doc, password: undefined } });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
@@ -150,20 +220,24 @@ app.get('/api/auth/me', auth, (req, res) => res.json({ success: true, data: req.
 // Wallet
 app.get('/api/wallet/balance', auth, (req, res) => res.json({ success: true, data: req.user.wallet }));
 app.post('/api/wallet/deposit', auth, async (req, res) => {
+  if (amount < 50) return res.status(400).json({ success: false, message: 'Minimum deposit amount is $50' });
   const { amount, method } = req.body;
   req.user.wallet.balance += parseFloat(amount);
   await req.user.save();
   await Transaction.create({ user: req.user._id, type: 'deposit', amount, paymentMethod: method });
-  if (req.user.email) sendEmail({ to: req.user.email, subject: `Deposit $${amount}`, html: `<p>Deposited $${amount}</p>` }).catch(()=>{});
+  if (req.user.email) sendEmail({ to: req.user.email, subject: `Deposit $${amount}`, html: `<p>Deposited $${amount}</p>` }).catch(err => console.error('❌ Email failed:', err.message));
   res.json({ success: true, data: req.user.wallet });
 });
 app.post('/api/wallet/withdraw', auth, async (req, res) => {
+  if (req.user.kycStatus !== "verified") {
+    return res.status(400).json({ success: false, message: "KYC verification required to withdraw funds. Please complete verification." });
+  }
   const { amount } = req.body;
   if (req.user.wallet.balance < amount) return res.status(400).json({ success: false, message: 'Insufficient balance' });
   req.user.wallet.balance -= parseFloat(amount);
   await req.user.save();
   await Transaction.create({ user: req.user._id, type: 'withdrawal', amount });
-  if (req.user.email) sendEmail({ to: req.user.email, subject: `Withdrawal $${amount}`, html: `<p>Withdrawn $${amount}</p>` }).catch(()=>{});
+  if (req.user.email) sendEmail({ to: req.user.email, subject: `Withdrawal $${amount}`, html: `<p>Withdrawn $${amount}</p>` }).catch(err => console.error('❌ Email failed:', err.message));
   res.json({ success: true, data: req.user.wallet });
 });
 app.get('/api/wallet/transactions', auth, async (req, res) => {
@@ -186,11 +260,14 @@ app.post('/api/trading/open', auth, async (req, res) => {
 app.post('/api/trading/close/:id', auth, async (req, res) => {
   const trade = await Trade.findOne({ _id: req.params.id, user: req.user._id, status: 'open' });
   if (!trade) return res.status(404).json({ success: false, message: 'Trade not found' });
-  const m = markets[trade.symbol];
-  const cp = m.price;
-  const profit = trade.type === 'buy' ? (cp - trade.openPrice) * trade.volume * 100000 : (trade.openPrice - cp) * trade.volume * 100000;
-  trade.closePrice = cp; trade.profit = profit; trade.status = 'closed'; trade.closedAt = new Date();
-  await trade.save();
+  // Calculate admin fee (1% of profit)
+const adminFee = Math.abs(profit) * 0.01;
+// Add fee to admin wallet
+const admin = await Admin.findOne({ email: 'admin@easypayforex.com' });
+if (admin) {
+  await admin.save();
+}
+ 
   req.user.tradingAccount.margin -= trade.margin;
   req.user.tradingAccount.freeMargin += trade.margin + profit;
   req.user.wallet.balance += profit;
@@ -248,6 +325,30 @@ app.post('/api/admin/test-email', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
+// Admin Wallet Routes
+app.get('/api/admin/wallet', adminAuth, async (req, res) => {
+  const admin = await Admin.findOne({ email: 'admin@easypayforex.com' });
+  res.json({ success: true, data: { balance: admin.wallet?.balance || 0 } });
+});
+
+app.post('/api/admin/wallet/deposit', adminAuth, async (req, res) => {
+  const { amount } = req.body;
+  const admin = await Admin.findOne({ email: 'admin@easypayforex.com' });
+  admin.wallet.balance += parseFloat(amount);
+  await admin.save();
+  res.json({ success: true, data: { balance: admin.wallet.balance } });
+});
+
+app.post('/api/admin/wallet/withdraw', adminAuth, async (req, res) => {
+  const { amount, method } = req.body;
+  const admin = await Admin.findOne({ email: 'admin@easypayforex.com' });
+  if (admin.wallet.balance < amount) return res.status(400).json({ success: false, message: 'Insufficient balance' });
+  admin.wallet.balance -= parseFloat(amount);
+  await admin.save();
+  io.emit('adminNotification', { type: 'withdrawal', amount, method, time: new Date() });
+  res.json({ success: true, data: { balance: admin.wallet.balance } });
+});
+
 io.on('connection', (socket) => {
   console.log('🟢 Connected:', socket.id);
   socket.emit('marketUpdate', markets);
@@ -259,8 +360,8 @@ mongoose.connect('mongodb://localhost:27017/easypayforex')
   .then(async () => {
     console.log('✅ MongoDB connected');
     await seedAdmin();
-    server.listen(process.env.PORT || 5000, () => {
-      console.log(`🚀 Backend on http://localhost:${process.env.PORT || 5000}`);
+    server.listen(PORT, () => {
+      console.log(`🚀 Backend on http://localhost:${PORT}`);
     });
   })
   .catch(err => {

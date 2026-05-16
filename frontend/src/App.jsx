@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 import {
   Container, Box, Typography, Button, Grid, Paper, Chip, TextField,
   InputAdornment, IconButton, AppBar, Toolbar, MenuItem, Card, CardContent,
@@ -10,16 +10,16 @@ import {
 import {
   TrendingUp, ShowChart, ArrowForward, Person, Phone, Email, Lock,
   Visibility, VisibilityOff, Star, AccountBalanceWallet, ArrowUpward,
-  ArrowDownward, Chat, Send, Close, Public, Search, Group, Article
+  ArrowDownward, Chat, Send, Close, Public, Search, Group, Article, CheckCircle
 } from '@mui/icons-material'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts'
-import { marketAPI } from './services/api'
+import { marketAPI, tradingAPI, walletAPI, authAPI } from './services/api'
 import { io } from 'socket.io-client'
 
-// ---------- Dark theme colors ----------
+// ---------- Dark theme ----------
 const darkBg   = '#0a0b1e'
 const cardBg   = '#13152a'
 const accent   = '#4fc3f7'
@@ -33,7 +33,7 @@ const fieldStyle = {
   }
 }
 
-// ---------- All Countries (195+) ----------
+// ---------- All 195+ Countries ----------
 const allCountries = [
   { code: "+93", flag: "🇦🇫", name: "Afghanistan" },
   { code: "+355", flag: "🇦🇱", name: "Albania" },
@@ -335,20 +335,15 @@ const TradePopups = () => {
   useEffect(() => {
     const t = setInterval(() => {
       setShow(false)
-      setTimeout(() => {
-        setI(p => (p+1)%popups.length)
-        setShow(true)
-      }, 300)
+      setTimeout(() => { setI(p => (p+1)%popups.length); setShow(true) }, 300)
     }, 3500)
     return () => clearInterval(t)
   }, [])
   return (
     <Box sx={{ position:"fixed", bottom:100, left:20, zIndex:998 }}>
-      {show && (
-        <Paper sx={{ bgcolor:"rgba(0,212,170,0.95)", color:"white", p:1.5, borderRadius:2, maxWidth:300 }}>
-          <Typography variant="body2">🎉 {popups[i]}</Typography>
-        </Paper>
-      )}
+      {show && <Paper sx={{ bgcolor:"rgba(0,212,170,0.95)", color:"white", p:1.5, borderRadius:2, maxWidth:300 }}>
+        <Typography variant="body2">🎉 {popups[i]}</Typography>
+      </Paper>}
     </Box>
   )
 }
@@ -366,7 +361,7 @@ const AIChatbot = () => {
     'xau/usd':'Gold (XAU/USD) is breaking resistance. Strong BUY signal. Target $2,050, stop loss $2,015.',
     'btc/usd':'Bitcoin is volatile. Our AI sees a potential rally to $45,000. BUY with caution.',
     'oil':'Crude oil is rallying on supply concerns. BUY at current price, target $75.00.',
-    'deposit':'To deposit funds: Go to Wallet → Deposit. We accept Stripe, PayPal, Skrill, Neteller, and bank transfer. Minimum deposit is $100.',
+    'deposit':'To deposit funds: Go to Wallet → Deposit. We accept Stripe, PayPal, Skrill, Neteller, and bank transfer. Minimum deposit is $50.',
     'withdraw':'To withdraw: Go to Wallet → Withdraw. Withdrawals are processed within 24 hours. Minimum withdrawal is $50.',
     'account types':'We offer Individual, Corporate, and Affiliate accounts. Individual accounts are for personal traders. Corporate accounts are for businesses. Affiliate accounts allow you to earn commissions by referring others.',
     'affiliate':'As an affiliate, you earn up to 20% commission on every trade made by your referrals. Share your unique link and earn passive income.',
@@ -454,6 +449,65 @@ const AIChatbot = () => {
         </Paper>
       )}
     </>
+  )
+}
+
+// ---------- Login Page ----------
+const LoginPage = () => {
+  const [emailOrPhone, setEmailOrPhone] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
+
+  const handleLogin = async () => {
+    setError('')
+    if (!emailOrPhone || !password) {
+      setError('Please fill in all fields')
+      return
+    }
+    try {
+      const res = await authAPI.login({
+        email: emailOrPhone.includes('@') ? emailOrPhone : undefined,
+        phoneNumber: !emailOrPhone.includes('@') ? emailOrPhone : undefined,
+        password
+      })
+      localStorage.setItem('easypayforex_token', res.data.token)
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed')
+    }
+  }
+
+  return (
+    <Box sx={{ bgcolor: darkBg, minHeight: '100vh', pt: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Paper sx={{ bgcolor: cardBg, p: 4, borderRadius: 3, maxWidth: 400, width: '100%', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <Typography variant="h5" fontWeight="bold" sx={{ color: 'white', mb: 3, textAlign: 'center' }}>
+          Login to EASYPAYFOREX
+        </Typography>
+        {error && <Typography color="error" variant="body2" sx={{ mb: 2, textAlign: 'center' }}>{error}</Typography>}
+        <TextField
+          fullWidth placeholder="Email or Phone Number" value={emailOrPhone}
+          onChange={(e) => setEmailOrPhone(e.target.value)}
+          InputProps={{ startAdornment: <InputAdornment position="start"><Person sx={{ color: '#8892b0' }} /></InputAdornment> }}
+          sx={{ mb: 2, '& .MuiOutlinedInput-root': { color: 'white', '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' } } }}
+        />
+        <TextField
+          fullWidth type="password" placeholder="Password" value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          InputProps={{ startAdornment: <InputAdornment position="start"><Lock sx={{ color: '#8892b0' }} /></InputAdornment> }}
+          sx={{ mb: 3, '& .MuiOutlinedInput-root': { color: 'white', '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' } } }}
+        />
+        <Button
+          fullWidth variant="contained" size="large" onClick={handleLogin}
+          sx={{ background: 'linear-gradient(135deg, #4fc3f7, #7c4dff)', py: 1.5, borderRadius: 2, fontWeight: 'bold' }}
+        >
+          Login
+        </Button>
+        <Typography sx={{ color: '#8892b0', textAlign: 'center', mt: 2 }}>
+          Don't have an account? <Button component="a" href="/register" sx={{ color: accent, textTransform: 'none' }}>Sign Up</Button>
+        </Typography>
+      </Paper>
+    </Box>
   )
 }
 
@@ -720,7 +774,6 @@ const MarketsPage = ({ markets }) => (
   </Box>
 )
 
-// ---------- LIVE TRADING PAGE WITH TRADINGVIEW IFRAME + ORDER EXECUTION ----------
 const TradingPage = ({ markets }) => {
   const [selectedPair, setSelectedPair] = useState('EUR/USD')
   const [volume, setVolume] = useState('0.01')
@@ -728,13 +781,12 @@ const TradingPage = ({ markets }) => {
   const [takeProfit, setTakeProfit] = useState('')
   const [orderLoading, setOrderLoading] = useState(false)
 
-  // Convert pair to TradingView symbol
   const getTVSymbol = (pair) => {
     if (pair === 'XAU/USD') return 'XAUUSD'
     if (pair === 'XAG/USD') return 'XAGUSD'
     if (pair === 'OIL/USD') return 'USOIL'
     if (pair.includes('/')) return 'FX:' + pair.replace('/', '')
-    return pair // e.g. US30, SPX500, NAS100
+    return pair
   }
 
   const currentMarket = markets?.find(m => m.pair === selectedPair)
@@ -742,21 +794,17 @@ const TradingPage = ({ markets }) => {
   const priceChange = currentMarket?.change || ''
   const isUp = currentMarket?.up ?? false
 
-  // Execute a trade (only if logged in)
   const handleTrade = async (type) => {
     const token = localStorage.getItem('easypayforex_token')
     if (!token) {
-      // Not logged in – redirect to register page
       alert('Please login or create an account to trade.')
       window.location.href = '/register'
       return
     }
-
     if (!volume || parseFloat(volume) <= 0) {
       alert('Please enter a valid volume')
       return
     }
-
     setOrderLoading(true)
     try {
       const res = await tradingAPI.openTrade({
@@ -777,15 +825,16 @@ const TradingPage = ({ markets }) => {
     }
   }
 
-  const forexPairs = ["EUR/USD","GBP/USD","USD/JPY","AUD/USD","USD/CAD"]
-  const commodities = ["XAU/USD","XAG/USD","OIL/USD"]
-  const indices = ["US30","SPX500","NAS100"]
+  const forexPairs = ["EUR/USD","GBP/USD","USD/JPY","USD/CHF","AUD/USD","USD/CAD","NZD/USD","EUR/GBP","EUR/JPY","GBP/JPY"]
+  const commodities = ["XAU/USD","XAG/USD","OIL/USD","GAS/USD","COPPER/USD","COTTON/USD","COFFEE/USD"]
+  const indices = ["US30","SPX500","NAS100","UK100","GER30","JPN225","AUS200","EU50","FRA40"]
+  const cryptoPairs = ["BTC/USD","ETH/USD","XRP/USD","LTC/USD","ADA/USD","SOL/USD","DOT/USD","BNB/USD"]
+  const stocks = ["AAPL","MSFT","GOOGL","AMZN","TSLA","META","NVDA","NFLX"]
 
   return (
     <Box sx={{ bgcolor: darkBg, minHeight: '100vh', pt: 10 }}>
       <Container maxWidth="xl" sx={{ py: 2 }}>
         <Grid container spacing={2}>
-          {/* Market selector sidebar */}
           <Grid item xs={12} md={2}>
             <Paper sx={{ bgcolor: cardBg, p: 2, borderRadius: 3, height: '100%' }}>
               <Typography variant="body2" fontWeight="bold" sx={{ color: accent, mb: 2 }}>📊 Markets</Typography>
@@ -810,10 +859,23 @@ const TradingPage = ({ markets }) => {
                   {p}
                 </Button>
               ))}
+              <Typography variant="caption" sx={{ color: '#8892b0', display: 'block', mb: 1, mt: 2 }}>CRYPTO</Typography>
+              {cryptoPairs.map(p => (
+                <Button key={p} fullWidth onClick={() => setSelectedPair(p)}
+                  sx={{ color: selectedPair===p ? 'white' : '#8892b0', justifyContent:'flex-start', py:0.3, fontSize:'0.75rem', bgcolor: selectedPair===p ? 'rgba(79,195,247,0.1)' : 'transparent', mb:0.2, textTransform:'none' }}>
+                  {p}
+                </Button>
+              ))}
+              <Typography variant="caption" sx={{ color: '#8892b0', display: 'block', mb: 1, mt: 2 }}>STOCKS</Typography>
+              {stocks.map(p => (
+                <Button key={p} fullWidth onClick={() => setSelectedPair(p)}
+                  sx={{ color: selectedPair===p ? 'white' : '#8892b0', justifyContent:'flex-start', py:0.3, fontSize:'0.75rem', bgcolor: selectedPair===p ? 'rgba(79,195,247,0.1)' : 'transparent', mb:0.2, textTransform:'none' }}>
+                  {p}
+                </Button>
+              ))}
             </Paper>
           </Grid>
 
-          {/* Chart area with TradingView iframe */}
           <Grid item xs={12} md={7}>
             <Paper sx={{ bgcolor: cardBg, p:3, borderRadius:3, mb:2 }}>
               <Box sx={{ display:'flex', justifyContent:'space-between', mb:2 }}>
@@ -831,7 +893,6 @@ const TradingPage = ({ markets }) => {
                 </Box>
               </Box>
 
-              {/* TRADINGVIEW IFRAME WIDGET */}
               <Box sx={{ height: 500, width: '100%', borderRadius: 2, overflow: 'hidden' }}>
                 <iframe
                   title="TradingView Chart"
@@ -839,14 +900,12 @@ const TradingPage = ({ markets }) => {
                   width="100%"
                   height="100%"
                   style={{ border: 'none' }}
-                  allowTransparency="true"
                   scrolling="no"
                 />
               </Box>
             </Paper>
           </Grid>
 
-          {/* Order panel & stats */}
           <Grid item xs={12} md={3}>
             <Paper sx={{ bgcolor: cardBg, p:3, borderRadius:3, mb:2 }}>
               <Typography variant="body2" fontWeight="bold" sx={{ color:'white', mb:2 }}>New Order</Typography>
@@ -917,6 +976,7 @@ const TradingPage = ({ markets }) => {
     </Box>
   )
 }
+
 const PortfolioPage = () => {
   const data = [
     { name: 'Forex', value: 45, color: '#4fc3f7' },
@@ -925,7 +985,6 @@ const PortfolioPage = () => {
     { name: 'Crypto', value: 10, color: '#ff6b6b' }
   ];
 
-  // Custom tooltip that pops out on hover
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const item = payload[0].payload;
@@ -964,9 +1023,17 @@ const PortfolioPage = () => {
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={[
                   { date: 'Jan', value: 10000 },
-                  { date: 'Feb', value: 14200 },
-                  { date: 'Mar', value: 18200 },
-                  { date: 'Apr', value: 21000 }
+                  { date: 'Feb', value: 10200 },
+                  { date: 'Mar', value: 9900 },
+                  { date: 'Apr', value: 10800 },
+                  { date: 'May', value: 10500 },
+                  { date: 'Jun', value: 11200 },
+                  { date: 'Jul', value: 11800 },
+                  { date: 'Aug', value: 11500 },
+                  { date: 'Sep', value: 12200 },
+                  { date: 'Oct', value: 12800 },
+                  { date: 'Nov', value: 13500 },
+                  { date: 'Dec', value: 14200 }
                 ]}>
                   <defs>
                     <linearGradient id="pf1" x1="0" y1="0" x2="0" y2="1">
@@ -998,7 +1065,6 @@ const PortfolioPage = () => {
                     outerRadius={100}
                     paddingAngle={5}
                     dataKey="value"
-                    // Interactive hover effect
                     activeIndex={[0, 1, 2, 3]}
                     activeShape={renderActiveShape}
                   >
@@ -1027,7 +1093,6 @@ const PortfolioPage = () => {
   );
 };
 
-// Helper for the active shape (optional, adds a nice effect)
 const renderActiveShape = (props) => {
   const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent } = props;
   return (
@@ -1103,7 +1168,20 @@ const DashboardPage = ({ markets }) => {
             <Paper sx={{ bgcolor:cardBg, p:3, borderRadius:3 }}>
               <Typography variant="h6" fontWeight="bold" sx={{ color:'white', mb:3 }}>📈 Portfolio Growth</Typography>
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={[{ date:'Jan', value:18000 },{ date:'Feb', value:19200 },{ date:'Mar', value:20500 },{ date:'Apr', value:21000 },{ date:'May', value:equity }]}>
+                <AreaChart data={[
+                  { date: 'Jan', value: 18000 },
+                  { date: 'Feb', value: 17600 },
+                  { date: 'Mar', value: 19200 },
+                  { date: 'Apr', value: 18800 },
+                  { date: 'May', value: 20500 },
+                  { date: 'Jun', value: 21200 },
+                  { date: 'Jul', value: 21800 },
+                  { date: 'Aug', value: 21500 },
+                  { date: 'Sep', value: 22500 },
+                  { date: 'Oct', value: 23000 },
+                  { date: 'Nov', value: 24000 },
+                  { date: 'Dec', value: 25500 }
+                ]}>
                   <defs><linearGradient id="dashGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#4fc3f7" stopOpacity={0.4} /><stop offset="95%" stopColor="#4fc3f7" stopOpacity={0} /></linearGradient></defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                   <XAxis dataKey="date" stroke="#8892b0" />
@@ -1240,22 +1318,109 @@ const DemoDashboard = () => {
   )
 }
 
-const WalletDepositPage = () => (
-  <Box sx={{ bgcolor:darkBg, minHeight:"100vh", pt:10 }}>
-    <Container maxWidth="sm" sx={{ py:4 }}>
-      <Paper sx={{ bgcolor:cardBg, p:4, borderRadius:4, textAlign:"center" }}>
-        <Typography variant="h5" fontWeight="bold" sx={{ color:"white", mb:3 }}>💰 Deposit Funds</Typography>
-        <Grid container spacing={2}>
-          {["💳 Stripe","🅿️ PayPal","💼 Skrill","🏦 Neteller","🏛️ Bank Transfer"].map((m,i) => (
-            <Grid item xs={12} key={i}><Button fullWidth variant="outlined" sx={{ color:"white", borderColor:"rgba(255,255,255,0.2)", py:2, fontSize:"1.1rem" }}>{m}</Button></Grid>
-          ))}
-        </Grid>
-        <Button fullWidth variant="contained" size="large" sx={{ background:"linear-gradient(135deg, #4fc3f7, #7c4dff)", mt:3, py:1.5, borderRadius:2 }}>Continue</Button>
-      </Paper>
-    </Container>
-  </Box>
-)
+const WalletDepositPage = () => {
+  const [selectedMethod, setSelectedMethod] = useState('')
+  const [amount, setAmount] = useState('')
+  const [loading, setLoading] = useState(false)
 
+  const paymentMethods = [
+    { id: 'visa', name: 'Visa', icon: '💳', description: 'Instant, low‑cost funding', badge: 'Popular', badgeColor: accent },
+    { id: 'mastercard', name: 'Mastercard', icon: '💳', description: 'Instant, low‑cost funding', badge: 'Secure', badgeColor: green },
+    { id: 'stripe', name: 'Stripe', icon: '💳', description: 'Credit/Debit cards via Stripe', badge: 'Fast', badgeColor: green },
+    { id: 'paypal', name: 'PayPal', icon: '🅿️', description: 'Instant e‑wallet transfer', badge: 'Global', badgeColor: '#003087' },
+    { id: 'skrill', name: 'Skrill', icon: '💼', description: 'Instant, low‑cost e‑wallet', badge: 'Low Fee', badgeColor: green },
+    { id: 'neteller', name: 'Neteller', icon: '🏦', description: 'Secure e‑wallet funding', badge: 'Trusted', badgeColor: gold },
+    { id: 'bank_transfer', name: 'Bank Transfer', icon: '🏛️', description: 'Direct wire transfer', badge: 'No Fee', badgeColor: '#8892b0' },
+  ]
+
+  const handleDeposit = async () => {
+    if (!amount || parseFloat(amount) < 50) {
+      alert('Minimum deposit is $50')
+      return
+    }
+    if (!selectedMethod) {
+      alert('Please select a payment method')
+      return
+    }
+    const token = localStorage.getItem('easypayforex_token')
+    if (!token) {
+      alert('Please log in to deposit funds')
+      window.location.href = '/login'
+      return
+    }
+    setLoading(true)
+    try {
+      const res = await walletAPI.deposit({
+        amount: parseFloat(amount),
+        method: selectedMethod,
+      })
+      alert(`✅ Deposit of $${amount} via ${selectedMethod} successful!`)
+      setAmount('')
+      setSelectedMethod('')
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message
+      alert(`❌ Deposit failed: ${msg}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Box sx={{ bgcolor: darkBg, minHeight: '100vh', pt: 10 }}>
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Paper sx={{ bgcolor: cardBg, p: 4, borderRadius: 4 }}>
+          <Typography variant="h5" fontWeight="bold" sx={{ color: 'white', mb: 1 }}>
+            💰 Deposit Funds
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#8892b0', mb: 4 }}>
+            Choose your preferred payment method – instant, low‑cost funding available. Minimum deposit $50.
+          </Typography>
+          <TextField
+            fullWidth type="number" placeholder="Enter amount (min $50)" value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            InputProps={{ startAdornment: <InputAdornment position="start"><Typography sx={{ color: accent, fontWeight: 'bold' }}>$</Typography></InputAdornment> }}
+            sx={{ mb: 4, '& .MuiOutlinedInput-root': { color: 'white', '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' } } }}
+          />
+          <Typography variant="h6" fontWeight="bold" sx={{ color: 'white', mb: 2 }}>Payment Methods</Typography>
+          <Grid container spacing={2} sx={{ mb: 4 }}>
+            {paymentMethods.map((method) => (
+              <Grid item xs={12} sm={6} key={method.id}>
+                <Paper
+                  sx={{
+                    p: 2, bgcolor: selectedMethod === method.id ? 'rgba(79,195,247,0.15)' : 'rgba(255,255,255,0.03)',
+                    border: '1px solid', borderColor: selectedMethod === method.id ? accent : 'rgba(255,255,255,0.1)',
+                    borderRadius: 2, cursor: 'pointer', transition: 'all 0.2s',
+                    '&:hover': { borderColor: accent, bgcolor: 'rgba(79,195,247,0.1)' },
+                  }}
+                  onClick={() => setSelectedMethod(method.id)}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Typography sx={{ fontSize: 28 }}>{method.icon}</Typography>
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body1" fontWeight="bold" sx={{ color: 'white' }}>{method.name}</Typography>
+                        {method.badge && <Chip label={method.badge} size="small" sx={{ bgcolor: method.badgeColor, color: 'white', fontSize: '0.6rem', height: 18 }} />}
+                      </Box>
+                      <Typography variant="caption" sx={{ color: '#8892b0' }}>{method.description}</Typography>
+                    </Box>
+                    {selectedMethod === method.id && <CheckCircle sx={{ color: accent, fontSize: 20 }} />}
+                  </Box>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+          <Button fullWidth variant="contained" size="large" onClick={handleDeposit}
+            disabled={loading || !amount || !selectedMethod}
+            sx={{ background: 'linear-gradient(135deg, #4fc3f7, #7c4dff)', py: 1.8, borderRadius: 2, fontSize: '1.1rem', fontWeight: 'bold' }}>
+            {loading ? 'Processing...' : `Deposit $${amount || '0'} via ${selectedMethod ? paymentMethods.find(m => m.id === selectedMethod)?.name : '...'}`}
+          </Button>
+        </Paper>
+      </Container>
+    </Box>
+  )
+}
+
+// ---------- App ----------
 function App() {
   const [liveMarkets, setLiveMarkets] = useState([])
 
@@ -1288,7 +1453,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage markets={liveMarkets} />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/login" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/markets" element={<MarketsPage markets={liveMarkets} />} />
         <Route path="/trading" element={<TradingPage markets={liveMarkets} />} />
         <Route path="/portfolio" element={<PortfolioPage />} />
